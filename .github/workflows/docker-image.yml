@@ -1,0 +1,33 @@
+name: Build and Push Docker Image
+
+# Запускает этот workflow при каждом пуше (push) в ветку "main" (енто триггер)
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Запускает сборку на последней версии Ubuntu
+
+    steps:
+    # Получить код из репозитория
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Логин в Docker Hub (мы будем использовать GitHub Container Registry - ghcr.io)
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    #  Собрать Docker-образ
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/my-flask-app:latest .
+
+    #  Запушить собранный образ в реестр (GitHub Container Registry)
+    - name: Push Docker image
+      run: |
+        docker push ghcr.io/${{ github.repository_owner }}/my-flask-app:latest
